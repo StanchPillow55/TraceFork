@@ -28,6 +28,16 @@ DEFAULT_LLM_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_LLM_MODEL = "gpt-4o-mini"
 
 
+def billable_allowed() -> bool:
+    """Server-side switch for routes that spend provider money (search, fetch, LLM).
+
+    SEARCHHAX_ALLOW_BILLABLE: "false"/"0"/"no"/"off" refuses them with 403. Unset keeps
+    them available (local development); docker-compose sets it to false by default.
+    """
+    value = os.environ.get("SEARCHHAX_ALLOW_BILLABLE", "").strip().lower()
+    return value not in {"false", "0", "no", "off"}
+
+
 def default_db_path() -> Path:
     """SQLite file for investigations. SEARCHHAX_DB_PATH overrides it (e.g. a mounted volume)."""
     override = os.environ.get("SEARCHHAX_DB_PATH", "").strip()

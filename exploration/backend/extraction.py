@@ -42,7 +42,15 @@ The quote must be an exact substring of the document. If you cannot copy an exac
 Do not assign a support status. Do not invent facts that are not in the document.
 Hypotheses must also quote an exact span or be omitted.
 gaps is a list of objects with text and importance between 0 and 1.
+Keep the answer short so it is never cut off: compact JSON on one line, no markdown,
+at most 8 relationships, 4 gaps, 3 hypotheses and 12 entities. Each quote is one
+sentence of at most 300 characters.
 """
+
+# The same limits are enforced when a payload is read, so an over-long answer cannot
+# grow the stored record (the model is asked for them above; this does not rely on it).
+MAX_LLM_RELATIONSHIPS = 8
+MAX_LLM_GAPS = 4
 
 
 class ExtractionBatch(BaseModel):
@@ -153,7 +161,10 @@ def relationships_from_llm_payload(
 ) -> ExtractionBatch:
     """Ground a model payload. A status field on the payload is ignored."""
     batch = ExtractionBatch(mode="llm")
-    for item in payload.get("relationships") or []:
+    relationships = payload.get("relationships") or []
+    if isinstance(relationships, list):
+        relationships = relationships[:MAX_LLM_RELATIONSHIPS]
+    for item in relationships:
         if not isinstance(item, dict):
             continue
         subject = str(item.get("subject") or "").strip()
@@ -180,7 +191,8 @@ def relationships_from_llm_payload(
             gaps=gaps,
             kind=kind,
         )
-    for item in payload.get("gaps") or []:
+    raw_gaps = payload.get("gaps") or []
+    for item in raw_gaps[:MAX_LLM_GAPS] if isinstance(raw_gaps, list) else raw_gaps:
         if isinstance(item, str):
             text, importance = item, 0.5
         elif isinstance(item, dict):
@@ -248,6 +260,10 @@ def _extract_with_llm(
         gaps=gaps,
     )
     tokens = usage.get("total_tokens")
+    if not isinstance(tokens, int):
+        # Anthropic's compatibility layer may report only the two parts.
+        parts = [usage.get("prompt_tokens"), usage.get("completion_tokens")]
+        tokens = sum(parts) if all(isinstance(p, int) for p in parts) else None
     batch.llm_tokens = int(tokens) if isinstance(tokens, int) else None
     return batch
 

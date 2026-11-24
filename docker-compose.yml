@@ -10,6 +10,9 @@ services:
         required: false
     environment:
       SEARCHHAX_DB_PATH: /data/exploration.sqlite
+      # Server-side gate for search/fetch/LLM routes (step, resume, answer, live baseline).
+      # Off unless you set SEARCHHAX_ALLOW_BILLABLE=true when starting the stack.
+      SEARCHHAX_ALLOW_BILLABLE: ${SEARCHHAX_ALLOW_BILLABLE:-false}
     volumes:
       - searchhax-data:/data
     restart: unless-stopped

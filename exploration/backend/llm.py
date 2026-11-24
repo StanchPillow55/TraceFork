@@ -20,6 +20,9 @@ class LLMNotConfigured(RuntimeError):
     pass
 
 
+ANTHROPIC_MAX_TOKENS = 2048
+
+
 class LLMResponseNotJSON(ValueError):
     """The model answered, but no complete JSON object could be parsed.
 
@@ -153,7 +156,9 @@ class OpenAICompatibleClient:
         is_anthropic = anthropic_endpoint(self.base_url)
         # Anthropic models (Haiku especially) are more verbose than gpt-4o-mini,
         # and the extraction JSON can be large; 300 tokens truncates it mid-string.
-        max_tokens = 1024 if is_anthropic else 300
+        # 2048 (was 1024): two live runs (2026-11-14, 2026-11-20) recorded a JSONDecodeError,
+        # consistent with an answer cut off mid-object. The prompt also caps list lengths.
+        max_tokens = ANTHROPIC_MAX_TOKENS if is_anthropic else 300
         payload: dict[str, Any] = {
             "model": self.model,
             "max_tokens": max_tokens,

@@ -89,6 +89,8 @@ def ranking_rows(export: ExplorationExport, activity: str, candidates: list[Evid
                 "snippet": candidate.snippet,
                 "attention_score": candidate.attention.score,
                 "knowledge_value_score": knowledge.score if knowledge is not None else None,
+                # Which of the user's confirmations were part of the known set when scored.
+                "knowledge_value_confirmed": list(knowledge.confirmed_known_assertion_ids) if knowledge is not None else [],
                 "bridge_trigger": trigger,
                 "bridge_status": "recorded" if trigger else "unknown",
                 "origin_kind": origin.origin_kind if origin is not None else "unknown",

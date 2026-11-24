@@ -1,0 +1,20 @@
+{
+  "source": "recorded live run 2026-11-20 (authorized capped session; not reproducible offline)",
+  "parent": "inv_51b381d9c7d24e59",
+  "child": "inv_7647b6b549474dd2",
+  "intervention": "challenge_evidence on clm_2d994c177a997b8f, objective 'Is this true?'",
+  "child_search_query": "independent evidence for or against: NVIDIA has invested $2 billion in CoreWeave",
+  "new_sources": 5,
+  "shared_sources": 4,
+  "new_distinct_claims": 0,
+  "new_distinct_open_questions": 1,
+  "contradictions_parent": 0,
+  "contradictions_child": 0,
+  "child_cost": {
+    "search_calls": 1,
+    "urls_fetched": 5,
+    "llm_calls": 5
+  },
+  "child_stop_reason": "budget_exhausted",
+  "note": "n = 1. The challenge found 5 additional sources but no new or contradicting claim, so it widened coverage without changing the finding."
+}

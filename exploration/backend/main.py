@@ -146,7 +146,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     @app.get("/api/health")
     def health() -> dict:
         """Liveness plus a read of the database. Reports configuration presence, never values."""
-        from exploration.backend.config import llm_api_key, telem_configured
+        from exploration.backend.config import billable_allowed, llm_api_key, telem_configured
         from shared.contracts import CONTRACT_VERSION
 
         try:
@@ -160,6 +160,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
             "contract_version": CONTRACT_VERSION,
             "search_configured": telem_configured(),
             "llm_configured": llm_api_key() is not None,
+            "billable_allowed": billable_allowed(),
         }
 
     @app.get("/api/exploration/investigations", response_model=InvestigationList)
@@ -175,11 +176,21 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     def get_investigation(investigation_id: str) -> ExplorationExport:
         return _load(app, investigation_id)
 
+    def require_billable() -> None:
+        from exploration.backend.config import billable_allowed
+
+        if not billable_allowed():
+            raise HTTPException(
+                status_code=403,
+                detail="Billable research is disabled on this server (SEARCHHAX_ALLOW_BILLABLE is false). Nothing was run.",
+            )
+
     @app.post("/api/exploration/investigations/{investigation_id}/step", response_model=ExplorationExport)
     def step_investigation(
         investigation_id: str,
         idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     ) -> ExplorationExport:
+        require_billable()
         _load(app, investigation_id)
 
         def run():
@@ -203,6 +214,8 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
 
     @app.post("/api/exploration/baseline", response_model=BaselineReport)
     def baseline(body: BaselineRequest) -> BaselineReport:
+        if body.story == "A":  # Story A runs live retrieval; Story C is the offline fixture.
+            require_billable()
         _export, report = run_baseline(
             story=body.story,
             configuration=body.configuration,
@@ -222,6 +235,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
         This explains evidence already verified. It adds no facts and does not
         re-verify. Makes one answer-model call.
         """
+        require_billable()
         from exploration.backend.answer import compose_answer
 
         from exploration.backend.budget import BudgetGuard
@@ -279,6 +293,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
         branch_id: str,
         idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     ) -> ExplorationExport:
+        require_billable()
         branch = app.state.orchestrator.database.get_branch(branch_id)
         if branch is None:
             raise HTTPException(status_code=404, detail="branch not found")

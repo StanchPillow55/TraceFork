@@ -1,5 +1,5 @@
 {
-  "contract_version": "1.2.0",
+  "contract_version": "1.3.0",
   "investigation": {
     "id": "inv_example",
     "question": "Do three articles independently substantiate a company's claim?",

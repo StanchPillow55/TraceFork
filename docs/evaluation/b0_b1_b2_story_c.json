@@ -1,0 +1,160 @@
+{
+  "story": "C (offline fixture corpus: 4 documents, one shared wire story, one conflicting amount)",
+  "sample_note": "One story, one run per configuration. Behavioural comparison, not a statistical result.",
+  "configurations": {
+    "B0": {
+      "reconcile": false,
+      "follow_up": false,
+      "classify": false,
+      "controller": "none",
+      "label": "one-shot"
+    },
+    "B1": {
+      "reconcile": false,
+      "follow_up": true,
+      "classify": false,
+      "controller": "fallback",
+      "label": "conventional iterative (offline proxy)"
+    },
+    "B2": {
+      "reconcile": true,
+      "follow_up": true,
+      "classify": true,
+      "controller": "focus",
+      "label": "SearchHax"
+    }
+  },
+  "results": [
+    {
+      "configuration": "B0",
+      "label": "one-shot",
+      "investigation_id": "inv_cb59ba1bdd424bfe",
+      "grounding": {
+        "evidence_spans": 13,
+        "exact_quote_spans": 13,
+        "exact_quote_rate": 1.0,
+        "supported_relationships": 21,
+        "distinct_supported_facts": 8,
+        "contradicted_relationships": 0,
+        "rejected_ungrounded_citations": 0
+      },
+      "independence": {
+        "documents": 4,
+        "independent_origins_claimed": 4,
+        "derivative_documents_detected": 0,
+        "shared_origin_detected": false,
+        "contradictions_detected": 0
+      },
+      "novelty": {
+        "policy_points": 4,
+        "mean_policy_novelty": 1.0,
+        "considered_candidates": 1,
+        "open_questions": 0
+      },
+      "cost": {
+        "search_calls": 0,
+        "urls_fetched": 0,
+        "llm_calls": 0,
+        "network_calls": 0,
+        "followups_executed": 0
+      },
+      "latency_ms": 23,
+      "stop_reason": null,
+      "decision_source": null
+    },
+    {
+      "configuration": "B1",
+      "label": "conventional iterative (offline proxy)",
+      "investigation_id": "inv_61e137dc4eeb456f",
+      "grounding": {
+        "evidence_spans": 13,
+        "exact_quote_spans": 13,
+        "exact_quote_rate": 1.0,
+        "supported_relationships": 21,
+        "distinct_supported_facts": 8,
+        "contradicted_relationships": 0,
+        "rejected_ungrounded_citations": 0
+      },
+      "independence": {
+        "documents": 4,
+        "independent_origins_claimed": 4,
+        "derivative_documents_detected": 0,
+        "shared_origin_detected": false,
+        "contradictions_detected": 0
+      },
+      "novelty": {
+        "policy_points": 4,
+        "mean_policy_novelty": 1.0,
+        "considered_candidates": 1,
+        "open_questions": 0
+      },
+      "cost": {
+        "search_calls": 0,
+        "urls_fetched": 0,
+        "llm_calls": 0,
+        "network_calls": 0,
+        "followups_executed": 0
+      },
+      "latency_ms": 22,
+      "stop_reason": "no_useful_actions",
+      "decision_source": "fallback"
+    },
+    {
+      "configuration": "B2",
+      "label": "SearchHax",
+      "investigation_id": "inv_a244c8edcf924f36",
+      "grounding": {
+        "evidence_spans": 13,
+        "exact_quote_spans": 13,
+        "exact_quote_rate": 1.0,
+        "supported_relationships": 20,
+        "distinct_supported_facts": 7,
+        "contradicted_relationships": 1,
+        "rejected_ungrounded_citations": 0
+      },
+      "independence": {
+        "documents": 4,
+        "independent_origins_claimed": 1,
+        "derivative_documents_detected": 3,
+        "shared_origin_detected": true,
+        "contradictions_detected": 1
+      },
+      "novelty": {
+        "policy_points": 4,
+        "mean_policy_novelty": 1.0,
+        "considered_candidates": 1,
+        "open_questions": 1
+      },
+      "cost": {
+        "search_calls": 1,
+        "urls_fetched": 0,
+        "llm_calls": 0,
+        "network_calls": 0,
+        "followups_executed": 1
+      },
+      "latency_ms": 28,
+      "stop_reason": "unresolved_uncertainty",
+      "decision_source": "convergence"
+    }
+  ],
+  "branch_usefulness": {
+    "source": "recorded live run 2026-11-20 (authorized capped session; not reproducible offline)",
+    "parent": "inv_51b381d9c7d24e59",
+    "child": "inv_7647b6b549474dd2",
+    "intervention": "challenge_evidence on clm_2d994c177a997b8f, objective 'Is this true?'",
+    "child_search_query": "independent evidence for or against: NVIDIA has invested $2 billion in CoreWeave",
+    "new_sources": 5,
+    "shared_sources": 4,
+    "new_distinct_claims": 0,
+    "new_distinct_open_questions": 1,
+    "contradictions_parent": 0,
+    "contradictions_child": 0,
+    "child_cost": {
+      "search_calls": 1,
+      "urls_fetched": 5,
+      "llm_calls": 5
+    },
+    "child_stop_reason": "budget_exhausted",
+    "note": "n = 1. The challenge found 5 additional sources but no new or contradicting claim, so it widened coverage without changing the finding."
+  }
+}

@@ -1275,6 +1275,14 @@ function PersistedSource({
               <dd>
                 attention {pv.attentionScore?.toFixed(2) ?? "—"} · knowledge value {pv.knowledgeValueScore?.toFixed(2) ?? "—"}
                 <br />
+                {(pv.knowledgeValueConfirmed?.length ?? 0) > 0 && (
+                  <>
+                    <small data-testid="kv-confirmed">
+                      Knowledge value counted {pv.knowledgeValueConfirmed!.length} thing(s) you confirmed you know ({pv.knowledgeValueConfirmed!.join(", ")}).
+                    </small>
+                    <br />
+                  </>
+                )}
                 <small>Ranking signals, not factual confidence.</small>
               </dd>
             </div>

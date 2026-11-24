@@ -1,6 +1,7 @@
 """Pydantic v2 contract shared by exploration and other SearchHax apps.
 
-``CONTRACT_VERSION`` is 1.2.0 (1.1.0 adds root_question and lifecycle; 1.2.0 adds CreateInvestigationRequest.profile_from_investigation_id; both additive). Add fields in a backward-compatible way (new
+``CONTRACT_VERSION`` is 1.2.0 (1.1.0 adds root_question and lifecycle; 1.2.0 adds CreateInvestigationRequest.profile_from_investigation_id; 1.3.0 adds
+KnowledgeValue.confirmed_known_assertion_ids; all additive). Add fields in a backward-compatible way (new
 optional fields, ``extra="ignore"``) instead of renaming or removing models.
 
 ``ConvergenceDecision.decision_source`` is recorded by exploration after a
@@ -19,7 +20,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-CONTRACT_VERSION = "1.2.0"
+CONTRACT_VERSION = "1.3.0"
 
 VerificationStatus = Literal["supported", "contradicted", "insufficient", "hypothesis"]
 StopReason = Literal[
@@ -85,6 +86,13 @@ class KnowledgeValue(_Model):
     )
     bridge_trigger: str | None = None
     bridge_terms: list[str] = Field(default_factory=list)
+    confirmed_known_assertion_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "User assertions (basis user_confirmation, state known) that were part of the known set when this "
+            "score was recorded (1.3.0, additive). Empty for scores recorded before 1.3.0 or without confirmations."
+        ),
+    )
 
 
 class KnownClaim(_Model):

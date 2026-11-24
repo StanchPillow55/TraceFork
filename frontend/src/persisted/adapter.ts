@@ -331,6 +331,7 @@ export function adaptInvestigation(
           if (node?.provenance) {
             node.provenance.attentionScore = typeof row.attention_score === "number" ? row.attention_score : null;
             node.provenance.knowledgeValueScore = typeof row.knowledge_value_score === "number" ? row.knowledge_value_score : null;
+            node.provenance.knowledgeValueConfirmed = asArray(row.knowledge_value_confirmed).filter((x): x is string => typeof x === "string");
             node.provenance.candidateId = str(row.id);
           }
         }

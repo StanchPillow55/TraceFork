@@ -34,7 +34,7 @@ from exploration.backend.extraction import ExtractionBatch, extract_document, me
 from exploration.backend.llm import OpenAICompatibleClient
 from exploration.backend.graph import EvidenceGraph
 from exploration.backend.ids import content_hash, new_id, stable_id
-from exploration.backend.knowledge_value import score_knowledge_value
+from exploration.backend.knowledge_value import ranking_profile, score_knowledge_value
 from exploration.backend.planner import branch_query, generate_actions, initial_search_query
 from exploration.backend.retrieval import RetrievalClient, normalize_url, page_failed
 from exploration.backend.story_c import STORY_C_QUESTION, load_story_c
@@ -654,6 +654,11 @@ class Orchestrator:
         investigation = export.investigation
         failures: list[str] = []
         profile = self._profile(export)
+        # Knowledge value ranks against the stored priors plus what the user has explicitly
+        # confirmed as known so far. Scores are recorded once, here; they are never recomputed.
+        confirmed_ids: list[str] = []
+        if profile is not None:
+            profile, confirmed_ids = ranking_profile(profile, self.database.list_assertions(profile.id))
         candidate_start = len(export.candidates)
         claim_start = len(export.claims)
         span_start = len(export.evidence_spans)
@@ -761,6 +766,8 @@ class Orchestrator:
             knowledge = (
                 score_knowledge_value(content, profile) if profile is not None else None
             )
+            if knowledge is not None and confirmed_ids:
+                knowledge.confirmed_known_assertion_ids = list(confirmed_ids)
             export.candidates.append(
                 EvidenceCandidate(
                     id=stable_id("cand", document.id),

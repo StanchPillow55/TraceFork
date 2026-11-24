@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from typing import Mapping, Sequence
 
-from shared.contracts import KnowledgeValue, ResearchProfile
+from shared.contracts import KnownClaim, KnowledgeValue, ResearchProfile
 
 from exploration.backend import attention as attention_module
 
@@ -136,6 +136,49 @@ def occurring_interests(passage: str, profile: ResearchProfile) -> list[str]:
         if attention_module.tokenize(interest) & passage_tokens:
             found.append(interest)
     return found
+
+
+def confirmed_known_claims(assertions: Sequence[Mapping]) -> list[KnownClaim]:
+    """Known claims the user explicitly confirmed, as of now.
+
+    Only the latest assertion per (subject, predicate, object) counts, the same rule the
+    knowledge view uses, so a later "not sure" withdraws an earlier "I know this". Only
+    ``epistemic_state == "known"`` with ``basis == "user_confirmation"`` qualifies:
+    encountered, retrieved, inferred or profile-declared rows never become known here.
+    """
+    latest: dict[tuple[str, str, str], Mapping] = {}
+    for assertion in assertions:
+        key = (
+            str(assertion.get("subject", "")).casefold(),
+            str(assertion.get("predicate", "")).casefold(),
+            str(assertion.get("object", "")).casefold(),
+        )
+        latest.pop(key, None)
+        latest[key] = assertion
+    return [
+        KnownClaim(
+            id=str(item["id"]),
+            subject=str(item.get("subject") or ""),
+            predicate=str(item.get("predicate") or ""),
+            object=str(item.get("object") or ""),
+            text=str(item.get("text") or item.get("subject") or ""),
+        )
+        for item in latest.values()
+        if item.get("epistemic_state") == "known" and item.get("basis") == "user_confirmation"
+    ]
+
+
+def ranking_profile(profile: ResearchProfile, assertions: Sequence[Mapping]) -> tuple[ResearchProfile, list[str]]:
+    """The profile used for knowledge-value scoring: stored priors plus confirmed knowledge.
+
+    Returns a copy; the stored profile snapshot is not changed. The second value lists
+    the assertion ids that were added, for provenance on each score.
+    """
+    confirmed = confirmed_known_claims(assertions)
+    if not confirmed:
+        return profile, []
+    merged = profile.model_copy(update={"known_claims": [*profile.known_claims, *confirmed]})
+    return merged, [claim.id for claim in confirmed]
 
 
 def score_knowledge_value(

@@ -74,6 +74,9 @@ describe("New investigation (live mode)", () => {
     fireEvent.click(screen.getByTestId("create-investigation"));
     await waitFor(() => expect(posts).toHaveLength(2));
     expect(posts[1].key).not.toBe(posts[0].key);
+    // Let the second request settle before the test ends; otherwise its state update can
+    // land after the environment is torn down (seen on CI as "window is not defined").
+    await waitFor(() => expect(screen.getByTestId("create-investigation").textContent).toContain("Save question"));
   });
 
   it("refuses very short questions", async () => {

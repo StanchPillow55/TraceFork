@@ -79,6 +79,8 @@ export interface ProvenanceView {
   quoteValid?: boolean;
   attentionScore?: number | null;
   knowledgeValueScore?: number | null;
+  /** User assertions (confirmed known) counted when the knowledge value was recorded. */
+  knowledgeValueConfirmed?: string[];
   candidateId?: string;
   provenanceId?: string;
 }

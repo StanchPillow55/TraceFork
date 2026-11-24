@@ -20,6 +20,7 @@ investigations but not run research.
 | `TELEM_API_KEY`, `TAVILY_API_KEY`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` | `.env` → `api` | Provider access for research steps (billable). |
 | `SEARCHHAX_DB_PATH` | `api` (set by compose) | SQLite file; `/data/exploration.sqlite` on the `searchhax-data` volume. |
 | `SEARCHHAX_ALLOWED_ORIGINS` | `api` | Extra CORS origins, comma-separated. `*` is refused. Not needed behind the bundled nginx (same origin). |
+| `SEARCHHAX_ALLOW_BILLABLE` | `api` (compose default `false`) | Server-side gate. When false, `/step`, `/branches/{id}/resume`, `/answer` and the live Story A baseline return 403 before any provider call. Unset outside compose means allowed (local development). |
 | `VITE_ALLOW_BILLABLE_RESEARCH` | build arg for `web` | `false` by default: the UI cannot start research. `true` enables research behind an explicit confirmation. |
 | `SEARCHHAX_BASIC_AUTH` | `web` | `off` (default) or a realm name to require HTTP basic auth. |
 | `SEARCHHAX_HTPASSWD` | compose | Path to an htpasswd file mounted read-only when basic auth is on. |
@@ -42,10 +43,14 @@ curl -s http://127.0.0.1:8080/healthz
 `/healthz` (and `/api/health`) reports `status`, `database`, `contract_version`, and whether
 search and an LLM are configured, as booleans. It never returns key values.
 
-To let the UI run research (billable), rebuild `web` with the flag:
+Research is billable and needs **both** switches: the server gate and the UI flag.
 
 ```bash
 VITE_ALLOW_BILLABLE_RESEARCH=true docker compose build web
+```
+
+```bash
+SEARCHHAX_ALLOW_BILLABLE=true docker compose up -d
 ```
 
 The backend still enforces each investigation's stored budget: at most 2 searches, 5 fetched
@@ -93,7 +98,20 @@ docker compose exec api python -c "import sqlite3; s=sqlite3.connect('/data/expl
 - Cost: every investigation records `usage` (searches, fetched URLs, LLM calls, tokens). The
   API does not aggregate spend across investigations.
 
-## 6. Verified so far
+## 6. Private pilot vs public multi-user deployment
+
+| Requirement | Private pilot (a few trusted users, one machine or VM) | Public / multi-user |
+|---|---|---|
+| Access | Basic auth (`SEARCHHAX_BASIC_AUTH` + htpasswd) behind TLS | Real accounts (OIDC/SSO), per-user sessions. **Not implemented.** |
+| Data isolation | One shared store; everyone sees all investigations and one profile store | Per-user ownership of investigations, branches, profiles and knowledge assertions in every query. **Not implemented** (no user id in the schema). |
+| Spend control | `SEARCHHAX_ALLOW_BILLABLE`, per-investigation budget caps, one step at a time per investigation | Per-user quotas and a global spend ceiling. **Not implemented** (usage is recorded per investigation only). |
+| Database | SQLite on a backed-up volume | A server database (e.g. Postgres) with real migrations; SQLite allows one writer. **Not implemented.** |
+| Secrets | `.env` on the host, never in images | A secrets manager and key rotation |
+| Abuse | Trusted users only | Rate limiting, request size limits beyond nginx's 1 MB, and monitoring of provider errors and spend |
+| Hosting / TLS | Your reverse proxy or a VM | Managed hosting, TLS, uptime monitoring and alerting |
+| Status | **Ready** to run as described here once you choose a host | **Blocked** on the items marked not implemented |
+
+## 7. Verified so far
 
 See `docs/audit/M0-M1-audit.md` (section 11) for the dated local verification of this
 setup. Nothing has been deployed to a public or shared host.
